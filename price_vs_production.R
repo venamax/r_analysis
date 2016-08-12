@@ -1,7 +1,7 @@
 ################################################################
 # Directory   : /Users/alejandrorojas/data/lab3_for_students_final
 # Dataset: gasOil.Rdata
-# Program Name: flights_demand.R
+# Program Name: price_vs_production.R
 # Analyst     : Alejandro Rojas
 # Last Updated: 8/9/2016 
 ################################################################
