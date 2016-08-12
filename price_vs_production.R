@@ -241,3 +241,25 @@ plot(lm4$residuals)
 acf(lm4$residuals)
 pacf(lm4$residuals)
 ## We still find correlations of residuals but they're closer to white noise
+
+# Predict gas prices 2012-2016
+summary(gas_ts)
+gas.fcast60<- forecast.Arima(gas.arima, h=60)
+dev.off()
+par(mfrow=c(1,1))
+xlimits <- c(1978, 2017)
+ylimits <- c(1, 7)
+plot(gas.fcast60, lty=2, xlim=xlimits,ylim=ylimits,
+     main="Out-of-Sample Forecast",
+     ylab="Original, Estimated, and Forecast Values")
+par(new=T)
+plot.ts(fitted(gas.fcast), 
+        col="green",lty=1,axes=F, xlim=xlimits,ylim=ylimits,ylab='')
+par(new=T)
+plot.ts(gas_ts, col="gray",axes=F,xlim=xlimits,ylim=ylimits,ylab="", lty=2)
+
+# add legend
+leg.txt <- c("Original Series", "Fitted series", "Forecast")
+legend("topleft", legend=leg.txt, lty=c(2,1,1),
+       col=c("gray","green","blue"), lwd=c(1,1,2),
+       bty='n', cex=1)
