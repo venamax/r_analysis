@@ -76,6 +76,7 @@ plot(decompose(gas_ts))
 lm1 <- lm(gas_ts ~ oil_ts)
 summary(lm1)
 cor(oil_ts,gas_ts)
+par(mfrow=c(2,2))
 hist(lm1$residuals)
 plot(lm1$residuals)
 acf(lm1$residuals)
@@ -232,14 +233,15 @@ summary(lm3)
 ## LM4: diff on fitted gas prices dependent on diff on fitted oil production
 gas.fitted.d <- diff(gas.fitted)
 oil.fitted.d <- diff(oil.fitted)
-lm4 <- lm(gas.fitted.d~oil.fitted.d)
-summary(lm4)
+lm3 <- lm(gas.fitted.d~oil.fitted.d)
+summary(lm3)
 ## p-value is now significant at 0.0105
 ## evidence that an increase in oil production leads to lower gas prices 
-hist(lm4$residuals)
-plot(lm4$residuals)
-acf(lm4$residuals)
-pacf(lm4$residuals)
+par(mfrow=c(2,2))
+hist(lm3$residuals)
+plot(lm3$residuals)
+acf(lm3$residuals)
+pacf(lm3$residuals)
 ## We still find correlations of residuals but they're closer to white noise
 
 # Predict gas prices 2012-2016

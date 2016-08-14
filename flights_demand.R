@@ -54,17 +54,20 @@ plot(decompose(fp_ts))
 ## No clear trend but data looks seasonal
 
 # Visually inspect autocorelations functions
-par(mfrow=c(2,1))
+par(mfrow=c(2,2))
+plot.ts(fp_ts, type="o",main="Flight Prices Web Search (fp_ts)", ylab='',xlab='Time', col='Blue')
+hist(fp_ts)
 acf(fp_ts)
 pacf(fp_ts)
 
 # Let's start with a AR model
-ar.fp <- ar(fp_ts, method='mle')
+ar.fp <- ar(fp_ts, method='mle', include.mean=demean)
 ## Does not converge because of seasonal components
 
 # Let's include seasonal components
 ar2s1 <- arima(fp_ts,order=c(2,0,0),seasonal=list(order=c(1,0,0),period=52, method='CSS'))
 ar2s1$aic
+ar2s1
 ## Let's examine residuals
 par(mfrow=c(2,2))
 plot.ts(ar2s1$residuals)
@@ -100,6 +103,14 @@ ma1s1$aic
 # Let's try (1,1,1)(0,1,1)
 alternate <-  arima(fp_ts, order=c(1,1,1), seasonal=list(order=c(0,1,1),period=52),method='ML')
 alternate$aic
+alternate
+par(mfrow=c(2,2))
+plot.ts(alternate$residuals)
+hist(alternate$residuals)
+acf(alternate$residuals)
+pacf(alternate$residuals)
+
+
 
 # summary 
 summary(ar2s1$residuals)
@@ -115,7 +126,7 @@ par(mfrow=c(1,1))
 xlimits <- c(2004, 2017)
 ylimits <- c(-3, 6)
 plot(fp.fcast, lty=2, xlim=xlimits,ylim=ylimits,
-     main="Out-of-Sample Forecast",
+     main="2016 Forecast",
      ylab="Original, Estimated, and Forecast Values")
 par(new=T)
 plot.ts(fitted(fp.fcast), 
@@ -129,6 +140,55 @@ legend("topleft", legend=leg.txt, lty=c(2,1,1),
        col=c("gray","green","blue"), lwd=c(1,1,2),
        bty='n', cex=1)
 
+### Calculate monthly averages
+date <- as.Date(f$Date, format='%m/%d/%Y')
+fp <- f$flight.prices
+fp_ts2 <- xts(fp,date)
+fp_ts2
+fp.monthly <- aggregate(fp_ts2, as.yearmon, mean)
+                     
+last_date = index(fp_ts2)[length(fp_ts2)]
+last_date
+forecast_df = data.frame(fp_predicted=fp.fcast$mean,
+                         fp_lower=fp.fcast$lower[,2],
+                         fp_upper=fp.fcast$upper[,2],
+                         date=last_date + seq(from=7, to=7*52, by=7))
+forecast_df
+fcast2 <- xts(forecast_df$fp_predicted,as.Date(forecast_df$date,format='%Y-%m-%d'))
+fcast2
+fcast.monthly <- aggregate(fcast2, as.yearmon, mean)
+fcast.monthly
+as.yearmon(attr(fp.monthly, 'index'), format='%m-%Y')
+start = attr(fp.monthly, 'index')[133:144]
+end = attr(fcast.monthly, 'index')[1:12]
+start
+lim = append(start,end)
+lim
+## Plot 
+# Plot forecast vs actual
+dev.off()
+par(mfrow=c(1,1))
+xlimits <- c(lim[1],lim[24])
+xlimits
+ylimits <- c(-2, 4)
+ylimits
+plot(fp.monthly, lty=2, xlim=xlimits,ylim=ylimits,
+     main="2016 Forecast",
+     ylab="Original and Forecast Values", xlab='Time')
+par(new=T)
+plot.ts(fcast.monthly, 
+        col="green",lty=1,axes=F, xlim=xlimits,ylim=ylimits,ylab='')
+# add legend
+leg.txt <- c("Original Series", "Forecast")
+legend("topleft", legend=leg.txt, lty=c(2,1,1),
+       col=c("gray","green"), lwd=c(1,1,2),
+       bty='n', cex=1)
+
+par(mfrow=c(1,2))
+length(fp.monthly)
+barplot(fp.monthly[133:144], ylim=c(-1,2), main='2015 Flight Prices Web Search')
+
+barplot(fcast.monthly, ylim=c(-1,2), main='2016 Flight Prices Web Search')
 #### Conclusion
 # We expect demand to drop as the year unfolds. So it looks like
 # pricing will probably needs to be more aggressive to entice customers

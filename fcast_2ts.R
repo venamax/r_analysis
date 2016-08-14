@@ -35,18 +35,26 @@ ts2 <- read.csv('ex3series.csv')
 summary(ts2)
 str(ts2)
 
-# Visually inspect flight prices
-par(mfrow=c(2,2))
-plot(ts$series1)
-hist(ts$series1)
-plot(ts$series2)
-hist(ts$series2)
-
 # Call libraries
 library(sandwich)
 library(forecast)
 library(statmod)
 library(xts)
+install.packages('vars')
+install.packages('tseries')
+library(vars)
+library(MASS)
+library(lmtest)
+library(tseries)
+
+# Visually inspect time series
+par(mfrow=c(2,2))
+plot(ts2$series1)
+hist(ts2$series1)
+plot(ts2$series2)
+hist(ts2$series2)
+
+
 
 # Build time series
 x_ts <- ts(ts2[,c('series1')], 
@@ -87,6 +95,46 @@ ar(x_ts)
 ## order 2
 ar(y_ts)
 ## order 14
+
+# Test for unit roots
+adf.test(x_ts)
+adf.test(y_ts)
+pp.test(x_ts)
+pp.test(y_ts)
+
+# Test for co-integration
+po.test(cbind(x_ts, y_ts))
+
+#####################################################################
+
+
+#####################################################################
+## Fit VAR Model to both series'
+
+# Setup to fit VAR model
+z_ts.ar <- ar(cbind(x_ts,y_ts), method='ols', dmean=T, intercept=F)
+z_ts.ar$ar
+
+# Plot ACF of resdiual series'
+dev.off()
+par(mfrow=c(2,1))
+acf(z_ts.ar$res[-c(1:15),1])
+acf(z_ts.ar$res[-c(1:15),2])
+
+# Fit VAR model
+z_ts.var <- VAR(cbind(x_ts, y_ts), p=15, type='trend')
+coef(z_ts.var)
+
+# Predict 6 steps ahead
+dev.off()
+z_ts.pred <- predict(z_ts.var, n.ahead=6)
+plot(z_ts.pred)
+y_preds <- data.frame(z_ts.pred$fcst[c(2,2)][c(1)])
+x_preds<- data.frame(z_ts.pred$fcst[c(1,1)][c(1)])
+x_afcast <- data.frame(x.fcast6)
+barplot(x_afcast$Point.Forecast)
+barplot(x_preds$x_ts.fcst)
+###### Predictions below without using VAR#########################################
 
 # Arima models
 # Function to find best parameters
